@@ -58,9 +58,9 @@ def validate():
     try:
         return jwt.decode(auth_token, jwt_key, algorithms="HS256")
     except jwt.ExpiredSignatureError:
-        return 'Signature expired. Please log in again.'
+        return make_response(jsonify({'error':'Signature expired. Please log in again.'})), 403
     except jwt.InvalidTokenError:
-        return 'Invalid token. Please log in again.'
+        return make_response(jsonify({'error':'Invalid token. Please log in again.'})), 403
 
 if __name__ == '__main__':
     port = int(getenv('PORT') or '8080')
