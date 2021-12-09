@@ -50,12 +50,12 @@ app.post('/v1/upload', (request, response) => {
         var buf = Buffer.concat(bufs);
 
         const fileType = await FileType.fromBuffer(buf);
-        console.log(`Detected file type: ${fileType.mime}`);
 
         if(!fileType) {
             console.warn(`Failed to detect file mime type`);
             return response.status(400).json({ 'error': 'Failed to detect file mime type' });
         }
+        console.log(`Detected file type: ${fileType.mime}`);
 
         if(!fileType.mime.startsWith('image/')) {
             console.warn(`Expected image, but got ${fileType.mime}`);
