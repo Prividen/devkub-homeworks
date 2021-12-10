@@ -32,9 +32,9 @@
 Примеры из "Ожидаемого результата" и "дополнительных материалов" противоречат тех-заданию по именам ендпойнтов 
 и прочих мелочей, где там авторизация, а где неавторизация. Сделал как в техзадании.
 
-Кроме того, пришлось пофиксить сервис [security](11-microservices-02-principles/security/src/server.py) 
+Кроме того, пришлось пофиксить сервис [security](https://github.com/Prividen/devkub-homeworks/commit/6b22eef226cc848188bae3c6f6ade65eace2583d) 
 (он милостиво выдавал 200 даже на неправильные токены и всех всегда пускал) 
-и [uploader](11-microservices-02-principles/uploader/src/server.js), который падал на неизвестных файлах и больше не работал.
+и [uploader](https://github.com/Prividen/devkub-homeworks/commit/43883506942a13d7d3232d42fcb74ecec60598fc), который падал на неизвестных файлах и больше не работал.
 
 [==> nginx.conf](11-microservices-02-principles/gateway/nginx.conf)
 
