@@ -1,0 +1,55 @@
+---
+- name: install openshift python package
+  become: true
+  pip:
+    name: openshift
+
+- name: create echoserver deployment
+  become: true
+  k8s:
+    api_version: v1
+    namespace: default
+    definition:
+      kind: Deployment
+      metadata:
+        labels:
+          app: hello-node
+        name: hello-node
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: hello-node
+        template:
+          metadata:
+            labels:
+              app: hello-node
+          spec:
+            containers:
+              - name: echoserver
+                image: k8s.gcr.io/echoserver:1.4
+                ports:
+                  - containerPort: 8080
+                    protocol: TCP
+
+- name: create echoserver service
+  become: true
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        labels:
+          app: hello-node
+        name: hello-node
+        namespace: default
+      spec:
+        selector:
+          app: hello-node
+        type: LoadBalancer
+        ports:
+          - protocol: TCP
+            port: 8080
+            targetPort: 8080
+

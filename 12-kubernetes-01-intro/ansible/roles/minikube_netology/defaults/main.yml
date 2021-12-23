@@ -1,0 +1,4 @@
+---
+kubectl_release_url: "https://storage.googleapis.com/kubernetes-release/release"
+kubectl_bin_path: "bin/linux/amd64/kubectl"
+minikube_latest_url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"

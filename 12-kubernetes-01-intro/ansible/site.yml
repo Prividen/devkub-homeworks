@@ -1,0 +1,23 @@
+---
+- name: Install minikube and run a cluster
+  hosts: all
+  roles:
+    - minikube_netology
+    - k8s_echoserver
+
+  post_tasks:
+    - name: Get echoserver URL
+      become: yes
+      command: minikube service hello-node --url
+      register: echoserver_url
+      changed_when: false
+
+    - name: Get echoserver output
+      uri:
+        url: "{{ echoserver_url.stdout }}"
+        return_content: true
+      register: echoserver_responce
+
+    - name: Show echoserver output
+      debug:
+        var: echoserver_responce.content

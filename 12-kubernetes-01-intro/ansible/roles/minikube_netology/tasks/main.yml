@@ -1,0 +1,42 @@
+---
+- name: Get version of latest kubectl
+  delegate_to: localhost
+  uri:
+    url: "{{ kubectl_release_url }}/stable.txt"
+    return_content: true
+  register: mk_ver
+
+- name: Download & install kubectl
+  become: true
+  get_url:
+    url: "{{ kubectl_release_url }}/{{ mk_ver.content }}/{{ kubectl_bin_path }}"
+    dest: /usr/local/bin/kubectl
+    mode: 0755
+
+- name: Download & install minikube
+  become: true
+  get_url:
+    url: "{{ minikube_latest_url }}"
+    dest: /usr/local/bin/minikube
+    mode: 0755
+
+- name: install docker
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: latest
+  notify: restart Docker
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - conntrack
+
+- name: run minikube cluster
+  become: true
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/minikube
+      - start
+      - --vm-driver=none
+      - --addons=dashboard,ingress
+  changed_when: false
