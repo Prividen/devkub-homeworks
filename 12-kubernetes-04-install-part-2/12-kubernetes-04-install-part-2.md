@@ -178,24 +178,71 @@ BODY:
 
 И даже работает.
 
-
- 
-
+---
 > ## Задание 2 (*): подготовить и проверить инвентарь для кластера в AWS
 > Часть новых проектов хотят запускать на мощностях AWS. Требования похожи:
 > * разворачивать 5 нод: 1 мастер и 4 рабочие ноды;
 > * работать должны на минимально допустимых EC2 — t3.small.
 
+UPD:
+
+Это получилось с развёртыванием инфраструктуры с помощью [contrib/terraform/aws](https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws),
+оно создаёт все ноды с приватными адресами, и ещё бастион с публичным. Только обещает сделать SSH-конфиг для доступа 
+через бастион, но обманывает и не делает. Но не беда, можно сделать и самим, если подумать. Там же 
+по существу просто SSH-прокси.
+
+После создания инфраструктуры немного редактируем получившийся файл инвентори, добавив туда переменную с SSH-подключением:
+```
+[k8s_cluster:vars]
+ansible_ssh_common_args='-A -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q admin@18.156.69.113"'
+```
+(это можно было бы пофиксить и в конфигурации терраформа, подредактировав `templates/inventory.tpl` и `create-infrastructure.tf`)
+
+И запустим развёртывание кластера:
+```
+ansible-playbook -i inventory/hosts -b -e 'cloud_provider=aws' -e 'ansible_user=admin' cluster.yml
+...
+PLAY RECAP ***************************************************************************************************************************************************************
+bastion                    : ok=6    changed=1    unreachable=0    failed=0    skipped=16   rescued=0    ignored=0   
+ip-10-250-192-90.eu-central-1.compute.internal : ok=476  changed=97   unreachable=0    failed=0    skipped=645  rescued=0    ignored=1   
+ip-10-250-196-25.eu-central-1.compute.internal : ok=476  changed=96   unreachable=0    failed=0    skipped=645  rescued=0    ignored=1   
+ip-10-250-202-2.eu-central-1.compute.internal : ok=501  changed=99   unreachable=0    failed=0    skipped=746  rescued=0    ignored=1   
+ip-10-250-203-120.eu-central-1.compute.internal : ok=656  changed=145  unreachable=0    failed=0    skipped=1038 rescued=0    ignored=3   
+ip-10-250-209-234.eu-central-1.compute.internal : ok=476  changed=97   unreachable=0    failed=0    skipped=645  rescued=0    ignored=1   
+ip-10-250-223-104.eu-central-1.compute.internal : ok=476  changed=97   unreachable=0    failed=0    skipped=645  rescued=0    ignored=1   
+localhost                  : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+Wednesday 19 January 2022  09:00:50 +0100 (0:00:00.092)       0:19:26.393 ***** 
+=============================================================================== 
+```
+
+За 20 минуточек создался, если выбрать регион поближе.
+
+```
+root@ip-10-250-203-120:~# kubectl get nodes -o wide
+NAME                                              STATUS   ROLES                  AGE   VERSION   INTERNAL-IP      EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION          CONTAINER-RUNTIME
+ip-10-250-192-90.eu-central-1.compute.internal    Ready    <none>                 20m   v1.23.1   10.250.192.90    <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+ip-10-250-196-25.eu-central-1.compute.internal    Ready    <none>                 20m   v1.23.1   10.250.196.25    <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+ip-10-250-202-2.eu-central-1.compute.internal     Ready    <none>                 20m   v1.23.1   10.250.202.2     <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+ip-10-250-203-120.eu-central-1.compute.internal   Ready    control-plane,master   21m   v1.23.1   10.250.203.120   <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+ip-10-250-209-234.eu-central-1.compute.internal   Ready    <none>                 20m   v1.23.1   10.250.209.234   <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+ip-10-250-223-104.eu-central-1.compute.internal   Ready    <none>                 20m   v1.23.1   10.250.223.104   <none>        Debian GNU/Linux 10 (buster)   4.19.0-18-cloud-amd64   containerd://1.5.9
+```
+
+Работает!
+
+---
+> Was:
 Я к сожалению ниасилил.  
 При попытке поступить по аналогии, создать инстансы ([main.tf для AWS](tf-aws/main.tf)) и запустить kubespray, playbook отваливается на разных ошибках. 
 То kubelet не может стартовать на мастер-ноде из-за отсутствующего сертификата (очень похоже на https://github.com/kubernetes-sigs/kubespray/issues/4693)  
 То рабочие ноды не могут присоедениться к мастеру, то ли кривой сертификат, то ли не могут получить информацию от API сервера, не успел разобраться.  
 Последняя ошибка выглядела как ошибка инициализации первого мастера, `error execution phase upload-config/kubelet: Error writing Crisocket information for the control-plane node: nodes "kubernetes-mycluster-master0" not found"`
 
-Попробовал развернуть инфраструктуру с [contrib/terraform/aws](https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws), оно обещало сгенерить готовый инвентори. Развернуло, сгененерило, но создало ноды (или сеть?) только с приватными адресами, подключиться не удаётся.  
+>Попробовал развернуть инфраструктуру с [contrib/terraform/aws](https://github.com/kubernetes-sigs/kubespray/tree/master/contrib/terraform/aws), оно обещало сгенерить готовый инвентори. Развернуло, сгененерило, но создало ноды (или сеть?) только с приватными адресами, подключиться не удаётся.  
 Предполагается, что там надо как-то работать через бастион-сервер, и для него должна создаваться специальная SSH-конфигурация, но она не создаётся, 
 и как объяснить кубеспрею чтоб разворачивал через этот единственный бастион с публичным IP.. я так и не понял.
 
-Некоторая дополнительная мудрость есть в [доке по AWS](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/aws.md), я попробовал ручками создать политики/роли, 
+>Некоторая дополнительная мудрость есть в [доке по AWS](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/aws.md), я попробовал ручками создать политики/роли, 
 назначить их инстансам и развесить таги, но что-то наверное сделал не так, ошибка просто поменялась на другую.  
 Наверное, какая-то специфика AWS, за пару неделек может и разобрался бы. 
