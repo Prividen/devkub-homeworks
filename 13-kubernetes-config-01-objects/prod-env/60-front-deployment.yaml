@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front
+  namespace: 13-01-prod
+  labels:
+    app: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front
+  template:
+    metadata:
+      labels:
+        app: front
+    spec:
+      containers:
+      - name: front
+        image: prividen/some-test-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+          - name: BASE_URL
+            value: http://back:9000

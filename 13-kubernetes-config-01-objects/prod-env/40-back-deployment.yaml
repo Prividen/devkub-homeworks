@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back
+  namespace: 13-01-prod
+  labels:
+    app: back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back
+  template:
+    metadata:
+      labels:
+        app: back
+    spec:
+      terminationGracePeriodSeconds: 10
+      initContainers:
+      - name: "init-sleep"
+        image: "busybox:latest"
+        imagePullPolicy: "IfNotPresent"
+        command: ['sleep', '5']
+      containers:
+      - name: back
+        image: prividen/some-test-backend:0.2.2
+        ports:
+        - containerPort: 9000
+        env:
+          - name: DATABASE_URL
+            value: postgres://postgres:postgres@postgres:5432/news
+          - name: JOKES_API_URL
+            value: "http://joke-server/joke/any"
