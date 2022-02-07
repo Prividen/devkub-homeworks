@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back-front
+  namespace: 13-02-stage
+  labels:
+    app: back-front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back-front
+  template:
+    metadata:
+      labels:
+        app: back-front
+    spec:
+      terminationGracePeriodSeconds: 10
+      initContainers:
+        - name: "init-sleep"
+          image: "busybox:latest"
+          imagePullPolicy: "IfNotPresent"
+          command: ['sleep', '5']
+      containers:
+        - name: back
+          image: prividen/some-test-backend:0.1
+          volumeMounts:
+            - name: shared-folder
+              mountPath: /static
+          ports:
+            - containerPort: 9000
+          env:
+            - name: DATABASE_URL
+              value: postgres://postgres:postgres@postgres:5432/news
+        - name: front
+          image: prividen/some-test-frontend:latest
+          volumeMounts:
+            - name: shared-folder
+              mountPath: /static
+          ports:
+            - containerPort: 80
+          env:
+            - name: BASE_URL
+              value: http://localhost:9000
+      volumes:
+        - name: shared-folder
+          emptyDir: {}

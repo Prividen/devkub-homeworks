@@ -1,0 +1,13 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: shared-folder-volume-claim
+  namespace: 13-02-prod
+spec:
+  storageClassName: "nfs"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi

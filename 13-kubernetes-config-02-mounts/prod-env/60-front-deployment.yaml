@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front
+  namespace: 13-02-prod
+  labels:
+    app: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front
+  template:
+    metadata:
+      labels:
+        app: front
+    spec:
+      containers:
+        - name: front
+          image: prividen/some-test-frontend:latest
+          volumeMounts:
+            - name: shared-folder
+              mountPath: /static
+          ports:
+            - containerPort: 80
+          env:
+            - name: BASE_URL
+              value: http://back:9000
+      volumes:
+        - name: shared-folder
+          persistentVolumeClaim:
+            claimName: shared-folder-volume-claim

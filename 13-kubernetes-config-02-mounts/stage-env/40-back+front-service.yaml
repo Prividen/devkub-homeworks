@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-front
+  namespace: 13-02-stage
+spec:
+  ports:
+    - name: web
+      port: 80
+    - name: api
+      port: 9000
+  selector:
+    app: back-front
+  type: ClusterIP
