@@ -1,0 +1,35 @@
+namespace: app
+termTimeout: 5
+initialSleep: 7
+#AppVersionOverride: 0.0.2
+
+frontend:
+#  version: 0.0.1
+  image:
+    repository: prividen/some-test-frontend
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is frontend version or, if not defined, the AppVersionOverride, and then chart appVersion.
+    tag: ""
+  sharedFolderPath: /static
+  port: 80
+
+backend:
+#  version: 0.0.1
+  image:
+    repository: prividen/some-test-backend
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is backend version or, if not defined, the AppVersionOverride, and then chart appVersion.
+    tag: ""
+  sharedFolderPath: /static
+  port: 9000
+
+postgres:
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "13-alpine"
+  user: postgres
+  password: postgres
+  db: news
+  port: 5432
+

@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-{{- include "safeVer" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: postgres-{{- include "safeVer" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-{{- include "useVer" . }}
+  template:
+    metadata:
+      labels:
+        app: postgres-{{- include "useVer" . }}
+    spec:
+      containers:
+        - name: postgres-server
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          volumeMounts:
+            - name: db-volume-{{- include "safeVer" . }}
+              mountPath: /var/lib/postgresql/data/
+          ports:
+            - containerPort: {{ .Values.postgres.port }}
+          env:
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.db }}
+      volumes:
+      - name: db-volume-{{- include "safeVer" . }}

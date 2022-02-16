@@ -1,0 +1,4 @@
+Please use command:
+kubectl -n {{ .Values.namespace }} port-forward service/back-front-{{- include "safeVer" . }} 8080:{{ .Values.frontend.port }} {{ .Values.backend.port }}
+to connect to our fellow application, and then open your browser with url: http://localhost:8080
+

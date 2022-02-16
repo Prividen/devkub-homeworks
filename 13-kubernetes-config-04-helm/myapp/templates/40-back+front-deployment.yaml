@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back-front-{{- include "useVer" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: back-front-{{- include "useVer" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back-front-{{- include "useVer" . }}
+  template:
+    metadata:
+      labels:
+        app: back-front-{{- include "useVer" . }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.termTimeout }}
+      initContainers:
+        - name: "init-sleep"
+          image: "busybox:latest"
+          imagePullPolicy: "IfNotPresent"
+          command: ['sleep', '{{ .Values.initialSleep }}']
+      containers:
+        - name: back
+          image: "{{ .Values.backend.image.repository }}:{{
+                  .Values.backend.image.tag | default .Values.backend.version | default .Values.AppVersionOverride | default .Chart.AppVersion
+                  }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          volumeMounts:
+            - name: shared-folder
+              mountPath: {{ .Values.backend.sharedFolderPath }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+          env:
+            - name: DATABASE_URL
+              value: "postgres://{{ .Values.postgres.user }}:{{ .Values.postgres.password }}@postgres-{{- include "safeVer" . }}:{{ .Values.postgres.port }}/{{ .Values.postgres.db }}"
+        - name: front
+          image: "{{ .Values.frontend.image.repository }}:{{
+                  .Values.frontend.image.tag | default .Values.frontend.version | default .Values.AppVersionOverride | default .Chart.AppVersion
+                  }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          volumeMounts:
+            - name: shared-folder
+              mountPath: {{ .Values.frontend.sharedFolderPath }}
+          ports:
+            - containerPort: {{ .Values.frontend.port }}
+          env:
+            - name: BASE_URL
+              value: http://localhost:{{ .Values.backend.port }}
+      volumes:
+        - name: shared-folder
+          emptyDir: {}
