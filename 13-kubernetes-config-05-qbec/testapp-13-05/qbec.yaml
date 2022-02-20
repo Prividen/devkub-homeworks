@@ -1,0 +1,15 @@
+apiVersion: qbec.io/v1alpha1
+kind: App
+metadata:
+  name: testapp-13-05
+spec:
+  environments:
+    stage:
+      defaultNamespace: stage-testapp-13-05
+      server: https://m4-1.test-kube.iptp.net:6443
+      excludes:
+        - external-api-endpoint
+    prod:
+      defaultNamespace: prod-testapp-13-05
+      server: https://m4-1.test-kube.iptp.net:6443
+  vars: {}
